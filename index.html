@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Melodist</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="helper.js" defer></script>
+  <style>
+    td {
+      vertical-align: middle;
+      min-width: 220px;
+    }
+
+    audio {
+      height: 50px;
+      width: 20vw;
+      min-width: 70px;
+      max-width: 220px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+    <div class="text-center">
+      <h1>Text-to-Song</h1>
+      <h3>Towards Controllable Music Generation Incorporating Vocals and Accompaniment</h3>
+      <p class="lead fw-bold">
+          |<a
+            href="https://openreview.net/pdf?id=fWk9CcDPZJ"
+            class="btn border-white bg-white fw-bold"
+            >paper</a
+          >|
+        </p>
+      <p>
+      
+
+      </p>
+      <!-- <p class="fst-italic mb-0">
+          Eugene Kharitonov, Damien Vincent,  Zalán Borsos, Raphaël Marinier, Sertan Girgin, Olivier Pietquin,
+          Matt Sharifi, Marco Tagliasacchi, Neil Zeghidour
+        </p> -->
+      <!-- <p><b>Anonymous Authors</b></p> -->
+    </div>
+    <p>
+      <b>Abstract.</b>
+
+      A song is a combination of singing voice and accompaniment. However, existing works focus on singing voice synthesis and music generation independently. Little attention was paid to explore song synthesis. In this work, we propose a novel task called text-to-song synthesis which incorporating both vocals and accompaniments generation. We develop Melodist, a two-stage text-to-song method that consists of singing voice synthesis (SVS) and vocal-to-accompaniment (V2A) synthesis. Melodist leverages tri-tower contrastive pretraining to learn more effective text representation for controllable V2A synthesis. A Chinese song dataset mined from a music website is built up to alleviate data scarcity for our research. The evaluation results on our dataset demonstrate that Melodist can synthesize songs with comparable quality and style consistency. Audio samples can be found in <a href="https://text2songMelodist.github.io/Sample/">https://text2songMelodist.github.io/Sample/</a>.
+    </p>
+  </div>
+
+  <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+    <h2 id="model-overview" style="text-align: center;">Overview</h2>
+    <div>
+      <p><br /></p>
+      <p style="text-align: center;">
+        <img src="overview.png" width=90% class="img-fluid">
+      </p>
+      <p><br /></p>
+    </div>
+    <p>
+      In this work, we propose Melodist, the first controllable text-to-song model. It is organized in two stages: 1) In the first stage we follow the common SVS process that generates a singing voice conditioned on the music score; 2) In the second stage we generate musical accompaniments from singing given natural language prompt. Instead of directly modeling distributions over vocal and accompaniment waveforms, we adopt acoustic tokens as the prediction targets. Finally, we reconstruct waveforms from predicted vocal acoustic tokens and accompaniment acoustic tokens and then mix them as the output.
+    </p>
+    <p>
+      In the SVS stage, the model synthesizes acoustic tokens conditioned on lyric phonemes, phoneme durations, and phonemes pitch; In the vocal-to-accompaniment synthesis stage, the model synthesizes acoustic tokens of accompaniment conditioned on vocal acoustic tokens and natural language prompts. We leverage a pre-trained text encoder providing text representation with consistent global characteristics with the vocal and accompaniment, which we will illustrate as follows.
+    </p>
+    <div>
+      <p><br /></p>
+      <p style="text-align: center;">
+        <img src="tri.png" width=50% class="img-fluid">
+      </p>
+      <p><br /></p>
+    </div>
+    <p>
+      We introduce a tri-tower pre-training scheme with contrastive loss that jointly embeds text, vocals, and accompaniments into a feature-aligned space. We leverage this pre-trained text encoder providing text representation with consistent global characteristics with the vocal and accompaniment. It can be incorporated with our backbone model to enhance attribute controllability.
+    <p>
+    </div>
+
+  </div>
+
+  <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+    <h2 id="tablecontents" style="text-align: left;">Table of Contents</h2>
+    <div>
+        <li><a href="#DS" class="btn border-white bg-white fw-bold">Samples Crawled From the Website</a></li>
+        <li><a href="#SVS" class="btn border-white bg-white fw-bold">Singing Voice Synthesis.</a></li>
+        <li><a href="#T2S" class="btn border-white bg-white fw-bold">Text-to-song Synthesis</a></li>
+    </div>
+  </div>
+
+  <div class="container shadow p-5 mb-5 bg-white rounded">
+    <h3>Samples Crawled From the Website<a id="DS" /></h3>
+
+    <p style="margin-top: 2em">
+      In this section, we provide a small subset of our dataset crawled from the web. Specifically, we present the following contents:
+    <li>Lyrics;</li>
+    <li>Tags;</li>
+    <li>Song Audio;</li>
+    <li>Source-separated Audios;</li>
+    </p>
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="gender_table_1">
+        <thead>
+          <tr>
+            <th style="text-align: center">ID</th>
+            <th style="text-align: center">Lyrics</th>
+            <th style="text-align: center">Tag</th>
+            <th style="text-align: center">Song</th>
+            <th style="text-align: center">Vocal</th>
+            <th style="text-align: center">Accompaniment</th>
+
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">0</td>
+            <td style="text-align: center">努力为你改变，却变不了预留的伏线</td>
+            <td style="text-align: center">soft, mellow, piano, soft, mellow, poignant, emotional, sentimental, romantic, nostalgic.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/song/%5B0008%5D可惜不是你.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/vocal/%5B0008%5D可惜不是你_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/accompaniment/%5B0008%5D可惜不是你.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">1</td>
+            <td style="text-align: center">我发誓不再说谎了</td>
+            <td style="text-align: center">passionate, vocal, shimmering, mellow, piano.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/song/%5B0038%5D会呼吸的痛.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/vocal/%5B0038%5D会呼吸的痛_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/accompaniment/%5B0038%5D会呼吸的痛.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">2</td>
+            <td style="text-align: center">凭什么要失望</td>
+            <td style="text-align: center">pop, passionate, shimmering, mellow, piano, soft.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/song/%5B0000%5D修炼爱情.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/vocal/%5B0000%5D修炼爱情_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/accompaniment/%5B0000%5D修炼爱情.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">3</td>
+            <td style="text-align: center">可惜没如果，噢</td>
+            <td style="text-align: center">pop, passionate, vocal, mellow, piano, emotional, passionate, emotional, ambient.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/song/%5B0052%5D可惜没如果.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/vocal/%5B0052%5D可惜没如果_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/accompaniment/%5B0052%5D可惜没如果.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">4</td>
+            <td style="text-align: center">丢掉火柴让我温暖你</td>
+            <td style="text-align: center">guitar, bass, guitar, electronic, beat, urban, dance, club.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/song/%5B0034%5D卖火柴的小女孩.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/vocal/%5B0034%5D卖火柴的小女孩.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/accompaniment/%5B0034%5D卖火柴的小女孩.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">5</td>
+            <td style="text-align: center">走开，或者别的什么</td>
+            <td style="text-align: center">vocal, shimmering.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/song/%5B0001%5D明天是美好的一天.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/vocal/%5B0001%5D明天是美好的一天_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/dataset/accompaniment/%5B0001%5D明天是美好的一天_no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="container shadow p-5 mb-5 bg-white rounded">
+    <h3>Singing Voice Synthesis<a id="SVS" /></h3>
+
+    <p style="margin-top: 2em">
+      In this section, we present samples of synthesized singing voice. Note that the following samples do not contain accompaniment.
+    </p>
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="gender_table_1">
+        <thead>
+          <tr>
+            <th style="text-align: center">ID</th>
+            <th style="text-align: center">Lyrics</th>
+            <th style="text-align: center">GT</th>
+            <th style="text-align: center">Generated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <td style="text-align: center">0</td>
+            <td style="text-align: center">在风暖月光的地点</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/2010000371_16k.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/2010000371_16k.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">1</td>
+            <td style="text-align: center">我看见你酷酷的笑容</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/2039001461_16k.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/2039001461_16k.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">2</td>
+            <td style="text-align: center">如果你也听说</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/Alto-3%23如果你也听说%230010.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/Alto-3%23如果你也听说%230010.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">3</td>
+            <td style="text-align: center">骄纵的心性已烟消云散</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/Alto-1%23致青春%230007.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/Alto-1%23致青春%230007.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">4</td>
+            <td style="text-align: center">我在废墟之中守着你走来，喔，我的泪光</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/Tenor-1%23一千年以后%230015.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/Tenor-1%23一千年以后%230015.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">5</td>
+            <td style="text-align: center">青春有你出席不是为了让你缺席，好想沿着回忆狂奔向你昨日的青空</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/1011%232-6_0104_昨日青空_成佳怡%230006_wf0_16k.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/1011%232-6_0104_昨日青空_成佳怡%230006_wf0_16k.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">6</td>
+            <td style="text-align: center">努力为你改变，却变不了预留的伏线</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/%5B0008%5D可惜不是你_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/%5B0008%5D可惜不是你_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">7</td>
+            <td style="text-align: center">怎么你却不敢了呢</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/%5B0012%5D崇拜_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/%5B0012%5D崇拜_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">8</td>
+            <td style="text-align: center">对着那空气说话</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/%5B0030%5D那个男人_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/%5B0030%5D那个男人_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <td style="text-align: center">9</td>
+            <td style="text-align: center">我发誓不再说谎了</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/opendata_gt/%5B0038%5D会呼吸的痛_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/sing/%5B0038%5D会呼吸的痛_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+    <h3 id="tablecontents" style="text-align: left;">Text-to-song Synthesis<a id="T2S" /></h3>
+    <p style="margin-top: 2em">
+      In this section, we present samples of synthesized singing voice.
+      We first provide some samples, where <b>the model incorporating speech data</b> demonstrates <b>superior control capabilities</b>, while <b>the model using solely singing data fails to control attributes</b> or the characteristics are <b>not significant</b>.
+    </p>
+    <div class="container pt-3 table-responsive">
+      <table class="table table-hover" id="lowresource_table1">
+        <thead>
+          <tr>
+            <th style="text-align: center">ID</th>
+            <th style="text-align: center">Lyrics</th>
+            <th style="text-align: center">Prompt</th>
+            <th style="text-align: center">Reference Vocal</th>
+            <th style="text-align: center">Synthesized Accompaniment</th>
+            <th style="text-align: center">Synthesized Song</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr height=100px>
+            <th style="text-align: center">0</th>
+            <td style="text-align: center">Camerarolling，镜头不会晃的抓住你的双手</td>
+            <td style="text-align: center">This is a hip-hop music piece. There is a male vocal rapping in the lead. The melody is being played by the synth pad while a strong bass sound can be heard in the background. The rhythm is provided by an electronic drum beat. The atmosphere is danceable and energetic. This piece could be played at nightclubs or dance clubs.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B马思唯%5D%5B0018%5DShawty.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B马思唯%5D%5B0018%5DShawty.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B马思唯%5D%5B0018%5DShawty.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <th style="text-align: center">1</th>
+            <td style="text-align: center">太挤了我的show太燥，你太矫情我不欢迎快点滚</td>
+            <td style="text-align: center">The low quality recording features a hip hop song that consists of a flat male vocal rapping over punchy kick and snare hits, shimmering hi hats, reversed crash cymbals and groovy piano melody. There are some crowd cheering noises in the background. It sounds groovy and addictive.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B马思唯%5D%5B0032%5D长城.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B马思唯%5D%5B0032%5D长城.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B马思唯%5D%5B0032%5D长城.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <th style="text-align: center">2</th>
+            <td style="text-align: center">它在天空看过多少次遗忘</td>
+            <td style="text-align: center">A male singer sings this soft melody with backup singers in vocal harmony. The song is medium tempo with a keyboard accompaniment, groovy bass line, steady drumming rhythm and tambourine beats.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B林俊杰%5D%5B0020%5D修炼爱情.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B林俊杰%5D%5B0020%5D修炼爱情.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B林俊杰%5D%5B0020%5D修炼爱情.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <th style="text-align: center">3</th>
+            <td style="text-align: center">眼泪再苦再咸有你安慰又是晴天</td>
+            <td style="text-align: center">This is a pop music piece. There is a male vocalist singing melodically in the lead. The melody is being played by the acoustic guitar and the electric guitar while the bass guitar is playing in the background. The rhythm is provided by a slow tempo acoustic drum beat. The atmosphere is easygoing. This piece could be used in the soundtrack of a teenage drama TV series.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B林俊杰%5D%5B0032%5D只对你有感觉.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B林俊杰%5D%5B0032%5D只对你有感觉.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B林俊杰%5D%5B0032%5D只对你有感觉.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <th style="text-align: center">4</th>
+            <td style="text-align: center">该怎么重新安装我的设定</td>
+            <td style="text-align: center">modern folk rock or indie with fingerstyle acoustic guitar and smooth male vocals. The vocal production is loud. Drums are present with the ride cymbal playing a steady pattern and the snare being played with brushes. The mood is mellow.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B颜人中%5D%5B0008%5D好喜欢你.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B颜人中%5D%5B0008%5D好喜欢你.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B颜人中%5D%5B0008%5D好喜欢你.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <th style="text-align: center">5</th>
+            <td style="text-align: center">岁月教会我懂分寸</td>
+            <td style="text-align: center">This slow pop song features a male voice singing the main melody. This is accompanied by a piano playing chords. The bass plays the root notes of the chords. A piano plays a chord in the background. There is no percussion in this song. The mood of this song is romantic. This song can be played in a romantic movie.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B颜人中%5D%5B0026%5D不争先生.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B颜人中%5D%5B0026%5D不争先生.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B颜人中%5D%5B0026%5D不争先生.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <th style="text-align: center">6</th>
+            <td style="text-align: center">如果有些人让你心伤</td>
+            <td style="text-align: center">he low quality recording features a commercial song that consists of a soft female vocal singing over mellow piano melody, shimmering bells, punchy kick and echoing synth lead melody. It sounds mellow, sad, emotional and passionate.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B郁可唯%5D%5B0001%5D原谅不美好.vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B郁可唯%5D%5B0001%5D原谅不美好.no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B郁可唯%5D%5B0001%5D原谅不美好.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+          <tr height=100px>
+            <th style="text-align: center">7</th>
+            <td style="text-align: center">地球来回旋转，我会耐心地等</td>
+            <td style="text-align: center">The low quality recording features a pop song that consists of a passionate female vocal singing over shimmering cymbals, mellow piano melody, punchy kick, groovy bass and strings melody. It sounds emotional, passionate and happy.</td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B梁静茹%5D%5B0011%5D孤单北半球%20(live).vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B梁静茹%5D%5B0011%5D孤单北半球%20(live).no_vocals.wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+            <td style="text-align: center"><audio controls controlslist="nodownload" class="px-1"> <source src='data/syn/%5B梁静茹%5D%5B0011%5D孤单北半球%20(live).wav' type="audio/wav">Your browser does not support the audio element.</audio></td>
+          </tr>
+      </table>
+    </div>
+  </div>
+
+</body>
+
+</html>
